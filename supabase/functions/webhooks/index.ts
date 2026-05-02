@@ -8,6 +8,26 @@ const supabase = createClient(
 )
 
 export default async function handler(req: Request) {
+  const { method } = req;
+
+  // --- 1. MANEJO DE VERIFICACIÓN (Petición GET de Meta) ---
+  if (method === "GET") {
+    const url = new URL(req.url);
+    const mode = url.searchParams.get("hub.mode");
+    const token = url.searchParams.get("hub.verify_token");
+    const challenge = url.searchParams.get("hub.challenge");
+
+    // Este es el token que tú elijas y pongas en el portal de Meta Developers
+    const VERIFY_TOKEN = Deno.env.get('META_VERIFY_TOKEN') || "tu_token_secreto_aqui";
+
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      console.log("WEBHOOK_VERIFIED");
+      return new Response(challenge, { status: 200 });
+    } else {
+      return new Response("Forbidden", { status: 403 });
+    }
+  }
+  
   try {
     const body = await req.json()
     
